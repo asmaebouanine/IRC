@@ -20,6 +20,10 @@
 #include <arpa/inet.h>
 #include <cctype>
 
+//ADD
+#include"Channel.hpp"
+#include<map>
+
 extern volatile sig_atomic_t g_running;
 struct Command
 {
@@ -42,10 +46,12 @@ class Server
 
         std::vector<Client> clients;
 
-
         const std::string SERVER_PASSWORD;
         const std::string SERVER_NAME;
-        
+
+        //   ADD
+        std::map<std::string, Channel*> channels;
+        /////// 
 
     public:
         Server(int port,const std::string Password);
@@ -54,6 +60,21 @@ class Server
         void run();
 
     private:
+
+        // ADD
+
+        Channel*    findChannel(const std::string& name);
+        Client*     findClientByFd(int fd);
+        Client*     findClientByNick(const std::string& nick);
+        void        broadcast(Channel *ch, const std::string& msg, int excludeFd);
+        std::string namesList(Channel *ch);
+
+        void        joinCommand(Client *client, std::vector<std::string> params);
+        void        partCommand(Client *client, std::vector<std::string> params);
+        void        inviteCommand(Client *client, std::vector<std::string> params);
+        void        kickCommand(Client *client, std::vector<std::string> params);
+        ////////
+        
         void server_setup();
         void server_core();
 

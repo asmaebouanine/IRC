@@ -1,10 +1,11 @@
 CC = c++
+
 CFLAGS = -Wall -Wextra -Werror -std=c++98
 
-SERVERSRS = server.cpp server_core.cpp handle_client.cpp handle_commads.cpp
+SERVERSRS = server.cpp server_core.cpp handle_client.cpp handle_commads.cpp \
+			Channel.cpp channelCommands.cpp
 
-
-HEADERS = server_client.hpp Server.hpp 
+HEADERS = server_client.hpp Server.hpp Channel.hpp
 
 NAME = ircserv
 
