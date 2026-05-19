@@ -38,48 +38,47 @@ bool Server::send_to_client(int fd, std::string msg)
 }
 
 /* ---------------- CLIENT HANDLING ---------------- */
-void Server::handle_new_client(void)
+void Server::handle_new_client()
 {
-    sockaddr_in addr;
-    socklen_t len = sizeof(addr);
-
-    int client_fd = accept(server_fd, (sockaddr*)&addr, &len);
-    if (client_fd < 0)
+   
+    while (true)
     {
-        std::cout << "accept failed\n";
-        return;
+         sockaddr_in addr;
+        socklen_t len = sizeof(addr);
+
+        int client_fd = accept(server_fd, (sockaddr*)&addr, &len);
+        if (client_fd < 0)
+            break;
+
+        if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(client_fd);
+            continue;
+        }
+
+        char ip[INET_ADDRSTRLEN];
+        if (!inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip)))
+        {
+            close(client_fd);
+            continue;
+        }
+
+        pollfd p;
+        p.fd = client_fd;
+        p.events = POLLIN;
+        p.revents = 0;
+        fds.push_back(p);
+
+        Client c;
+        c.fd = client_fd;
+        c.pass_ok = false;
+        c.nick_set = false;
+        c.user_set = false;
+        c.registered = false;
+        c.hostname = ip;
+
+        clients.push_back(c);
     }
-
-    if (fcntl(client_fd , F_SETFL, O_NONBLOCK) == -1) // so the socket fd becomes non blocking
-    {
-        std::cout << "fcntl failed \n";
-        close(client_fd);
-        return;
-    }
-    
-    char ip[INET_ADDRSTRLEN];
-    if (inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip)) == NULL)
-    {
-        close(client_fd);
-        return ;
-    }
-
-    pollfd client;
-    client.fd = client_fd;
-    client.events = POLLIN;
-    client.revents = 0;
-
-    fds.push_back(client);
-
-    Client c;
-    c.fd = client_fd;
-    c.pass_ok = false;
-    c.nick_set = false;
-    c.user_set = false;
-    c.registered = false;
-    c.hostname = ip;
-
-    clients.push_back(c);
 }
 
 void Server::handle_client(int client_fd)

@@ -17,6 +17,8 @@ void Server::server_setup()
     if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
     {
         std::cout << "setsockopt failed \n";
+        close(server_fd);
+        server_fd = -1;
         return;
     }
     
@@ -24,6 +26,7 @@ void Server::server_setup()
     {
         std::cout << "fcntl failed \n";
         close(server_fd);
+        server_fd = -1;
         return;
     }
 
@@ -35,12 +38,16 @@ void Server::server_setup()
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
     {
         std::cout << "binding failed \n";
+        close(server_fd);
+        server_fd = -1;
         return;
     }
 
     if (listen(server_fd, 10) == -1)
     {
         std::cout << "listening failed \n";
+        close(server_fd);
+        server_fd = -1;
         return;
     }
 
@@ -52,6 +59,7 @@ void Server::server_setup()
     fds.push_back(server); // I add server to my vector of fds;
 
     std::cout << "server ready\n";
+    return;
 }
 
 /* ---------------- MAIN LOOP ---------------- */
@@ -91,5 +99,7 @@ void Server::server_core()
 void Server::run()
 {
     server_setup();
-    server_core();
+    if (server_fd == -1)// so the poll loop dont hung forever
+        return;
+    server_core(); 
 }
