@@ -170,12 +170,14 @@ void Server::handle_command(Client *client, Command command)
     // ADD
     else if (command.cmd == "JOIN")
         joinCommand(client, command.params);
-    // else if (command.cmd == "PART")
-    //     partCommand(client, command.params);
-    // else if (command.cmd == "INVITE")
-    //     inviteCommand(client, command.params);
-    // else if (command.cmd == "KICK")
-    //     kickCommand(client, command.params);
+    else if (command.cmd == "PART")
+        partCommand(client, command.params);
+    else if (command.cmd == "INVITE")
+        inviteCommand(client, command.params);
+    else if (command.cmd == "KICK")
+        kickCommand(client, command.params);
+
+    /////
     
     else
         reply(client, "421", command.cmd, "Unknown command");
@@ -285,7 +287,7 @@ Command Server::parse_command(std::string command_)
     tmp = command_name(command_);
     capitalize_command(tmp.cmd);
 
-    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN")
+    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
         command = dispatch_pass_nick(tmp);
     else if(tmp.cmd == "USER")
         command = dispatch_user(tmp);

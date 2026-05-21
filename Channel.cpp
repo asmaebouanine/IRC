@@ -54,7 +54,7 @@ void Channel::removeMember(int fd)
     {
         if (_members[i] == fd)
         {
-            _members.erase(_members.begin() + 1);
+            _members.erase(_members.begin() + i);
             return ;
         }
     }
@@ -91,7 +91,7 @@ void Channel::removeOperator(int fd)
 
 bool Channel::isOperator(int fd) const
 {
-    for (size_t i = 0; _operators.size(); i++)
+    for (size_t i = 0; i < _operators.size(); i++)
     {
         if (_operators[i] == fd)
             return true;
@@ -130,7 +130,7 @@ bool Channel::isInvited(int fd) const
 //utility
 bool Channel::isEmpty() const
 {
-    return (_members.size());
+    return (_members.empty());
 }
 int Channel::getMemberCount() const
 {
