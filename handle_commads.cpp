@@ -154,6 +154,11 @@ void Server::handle_command(Client *client, Command command)
         reply(client, "451", "*", "You have not registered");
         return;
     }
+    if (!client->registered && command.cmd != "PASS" && command.cmd != "NICK" && command.cmd != "USER" && command.cmd != "QUIT")
+    {
+        reply(client, "451", command.cmd, "You have not registered");
+        return;
+    }
     if (command.cmd == "PASS")
     {
         if(client->registered)

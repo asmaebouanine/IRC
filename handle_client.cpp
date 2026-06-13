@@ -99,6 +99,12 @@ void Server::handle_client(int client_fd)
         if (clients[i].fd == client_fd)
         {
             clients[i].buffer.append(buff, bytes);
+            if (clients[i].buffer.size() > 1024 && clients[i].buffer.find("\n") == std::string::npos)
+            {
+                std::cout << "Client buffer overflowed, dropping connection.\n";
+                remove_client(client_fd);
+                return; // Exit immediately since the client object and fd are now destroyed
+            }
             check_buffer(&clients[i]);
             break;
         }

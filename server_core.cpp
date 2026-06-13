@@ -76,21 +76,25 @@ void Server::server_core()
             break;
         }
 
-        for  (size_t i = 0; i < fds.size();)
+        for (size_t i = 0; i < fds.size();)
         {
-           if (fds[i].revents & (POLLHUP | POLLERR))
-           {
+            size_t current_size = fds.size();
+
+            if (fds[i].revents & (POLLHUP | POLLERR))
+            {
                 remove_client(fds[i].fd);
-                continue;
+                continue; 
             }
-            if(fds[i].revents & (POLLIN))
+            if (fds[i].revents & (POLLIN))
             {
                 if (fds[i].fd == server_fd)
                     handle_new_client();
                 else
                     handle_client(fds[i].fd);
             }
-            i++; // so i only increment if no removing happened
+            // Only increment if the size didn't shrink from a disconnect
+            if (fds.size() == current_size)
+                i++;
         }
     }
 }
