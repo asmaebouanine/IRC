@@ -1,7 +1,6 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-
 #include "server_client.hpp"
 #include <vector>
 #include <string>
@@ -103,7 +102,7 @@ class Server
         void remove_client(int fd);
         static void signal_handler(int sig); // so i dond need an object to call it i sued static
         void reply(Client *client, const std::string &code, const std::string &command, const std::string &message);
-
+        void privmsg_command(Client *client, Command command);
 };
 
 #endif
