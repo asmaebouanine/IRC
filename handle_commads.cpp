@@ -347,7 +347,7 @@ Command Server::parse_command(std::string command_)
 
     if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER")
+    else if(tmp.cmd == "USER" || tmp.cmd == "PRIVMSG")
         command = dispatch_user(tmp);
 
     return(command);
