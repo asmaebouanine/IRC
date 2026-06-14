@@ -137,4 +137,153 @@ void Server::joinCommand(Client *client, std::vector<std::string> params)
     //end of names
     send_to_client(client->fd, ":" + SERVER_NAME + " 366 " + client->nickname + " " + chanName + " :End of /NAMES list");
 }
+//PART
+void Server::partCommand(Client *client, std::vector<std::string> params)
+{
+    if (params.empty())
+    {
+        reply(client, "461", "PART", "Not enough parameters");
+        return ;
+    }
 
+    std::string chanName = params[0];
+    std::string reason;
+    if (params.size() > 1)
+        reason = params[1];
+    else
+        reason = "Leaving";
+
+    if (!reason.empty() && reason[0] == ':')
+        reason = reason.substr(1);
+    
+    Channel *channel = findChannel(chanName);
+    if (!channel)
+    {
+        reply(client, "403", chanName, "No such channel");
+        return ;
+    }
+    if (!channel->isMember(client->fd))
+    {
+        reply(client, "442", chanName, "You're not on that channel");
+        return ;
+    }
+
+    std::string partMsg = prefix(*client) + " PART " + chanName + " :" + reason;
+    broadcast(channel, partMsg, -1);
+
+    channel->removeMember(client->fd);
+    channel->removeOperator(client->fd);
+
+    if (channel->isEmpty())
+    {
+        channels.erase(chanName);
+        delete channel;
+    }
+}
+//INVITE
+void Server::inviteCommand(Client *client, std::vector<std::string> params)
+{
+    if (params.size() < 2)
+    {
+        reply(client, "461", "INVITE", "Not enough parameters");
+        return ;
+    }
+
+    std::string targetNick = params[0];
+    std::string chanName = params[1];
+
+    Channel *channel = findChannel(chanName);
+    if (!channel)
+    {
+        reply(client, "403", chanName, "No such channel");
+        return ;
+    }
+    if (!channel->isMember(client->fd))
+    {
+        reply(client, "442", chanName, "You're not on that channel");
+        return ;
+    }
+    if (!channel->isOperator(client->fd))
+    {
+        reply(client, "482", chanName, "You're not channel operator");
+        return ;
+    }
+
+    Client *target = findClientByNick(targetNick);
+    if (!target)
+    {
+        reply(client, "401", targetNick, "No such nick");
+        return ;
+    }
+    if (channel->isMember(target->fd))
+    {
+        reply(client, "443", chanName, targetNick + " is already on channel");
+        return ;
+    }
+
+    channel ->addInvite(target->fd);
+
+    send_to_client(client->fd, ":" + SERVER_NAME + " 341"
+        + client->nickname + " " + targetNick + " " + chanName);
+
+    send_to_client(target->fd, prefix(*client) + " INVITE "
+        + targetNick + " :" + chanName);
+}
+//KICK
+void Server::kickCommand(Client *client, std::vector<std::string> params)
+{
+    if (params.size() < 2)
+    {
+        reply(client, "461", "KICK", "Not enough parameters");
+        return ;
+    }
+
+    std::string chanName = params[0];
+    std::string targetNick = params[1];
+    std::string reason;
+
+    if (params.size() > 2)
+        reason = params[2];
+    else
+        reason = "Kicked";
+
+    if (!reason.empty() && reason[0] == ':')
+        reason = reason.substr(1);
+
+    Channel *channel = findChannel(chanName);
+    if (!channel)
+    {
+        reply(client, "403", chanName, "No such channel");
+        return ;
+    }
+    if (!channel->isMember(client->fd))
+    {
+        reply(client, "442", chanName, "You're not that channel");
+        return ;
+    }
+    if (!channel->isOperator(client->fd))
+    {
+        reply(client, "482", chanName, "You're not channel operator");
+        return ;
+    }
+
+    Client *target = findClientByNick(targetNick);
+    if (!target || !channel->isMember(target->fd))
+    {
+        reply (client, "441", chanName, targetNick + " is not on that channel");
+        return ;
+    }
+
+    std::string kickMsg = prefix(*client) + " KICK " + chanName
+                        + " " + targetNick + " :" + reason;
+    broadcast(channel, kickMsg, -1);
+
+    channel->removeMember(target->fd);
+    channel->removeOperator(target->fd);
+
+    if (channel->isEmpty())
+    {
+        channels.erase(chanName);
+        delete channel;
+    }
+}
