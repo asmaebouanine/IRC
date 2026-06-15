@@ -11,7 +11,7 @@ void Server::reply(Client *client, const std::string &code, const std::string &c
 
     std::string target;
 
-    if (client->registered && !client->nickname.empty())
+    if (!client->nickname.empty())
         target = client->nickname;
     else
         target = "*";

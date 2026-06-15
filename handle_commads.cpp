@@ -93,7 +93,12 @@ void Server::pass_command(Client *client, Command command)
     //     reply(client, "462", "PASS", "You may not reregister");
     //     return;
     // }
-
+    if(client->registered)
+    {
+        reply(client, "462", "", "You may not reregister");
+        return;
+    }
+  
     if (command.params.size() < 1)
     {
         reply(client, "461", "PASS", "Not enough parameters");
@@ -102,7 +107,8 @@ void Server::pass_command(Client *client, Command command)
 
     if (command.params[0] != SERVER_PASSWORD)
     {
-        reply(client, "464", "PASS", "Wrong password");
+        reply(client, "464", "", "Password incorrect");
+        client->pass_ok = false;
         return;
     }
     client->pass_ok = true;
@@ -197,35 +203,27 @@ void Server::handle_command(Client *client, Command command)
     if (command.cmd.empty())
         return;
 
-    if (!client->pass_ok)
+    if (command.cmd == "PASS")
     {
-        if (command.cmd == "PASS")
-        {
-            pass_command(client, command);
-            return;
-        }
-        reply(client, "451", "*", "You have not registered");
+        pass_command(client, command);
         return;
     }
-    if (!client->registered && command.cmd != "PASS" && command.cmd != "NICK" && command.cmd != "USER" && command.cmd != "QUIT")
+
+    if (!client->pass_ok)
+    {
+        reply(client, "451", "", "You have not registered");
+        return;
+    }
+    if (!client->registered && command.cmd != "NICK" && command.cmd != "USER" && command.cmd != "QUIT")
     {
         reply(client, "451", command.cmd, "You have not registered");
         return;
     }
-    if (command.cmd == "PASS")
-    {
-        if(client->registered)
-            reply(client, "462", "PASS", "You may not reregister");
-        else
-           pass_command(client, command); 
-    }
 
-    else if (command.cmd == "NICK")
+    if (command.cmd == "NICK")
         nick_command(client, command);
     else if (command.cmd == "USER")
         user_command(client, command);
-
-    // ADD
     else if (command.cmd == "JOIN")
         joinCommand(client, command.params);
     else if (command.cmd == "PRIVMSG")
@@ -236,10 +234,10 @@ void Server::handle_command(Client *client, Command command)
         inviteCommand(client, command.params);
     else if (command.cmd == "KICK")
         kickCommand(client, command.params);
-    
     else
         reply(client, "421", command.cmd, "Unknown command");
 }
+
 
 
 /* ---------------- BUFFER ---------------- */
