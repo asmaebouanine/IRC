@@ -18,6 +18,8 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <cctype>
+#include <ctime> 
+
 
 //ADD
 #include"Channel.hpp"
@@ -85,6 +87,7 @@ class Server
         void try_register(Client *client);
         bool is_special_char(char c);
         bool nickname_exists(const std::string &nick);
+        bool irc_equal(const std::string &a, const std::string &b);
         bool is_valid_nick(const std::string &nick);
         void nick_command(Client *client, Command command);
         void pass_command(Client *client, Command command);

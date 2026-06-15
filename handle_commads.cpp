@@ -2,18 +2,32 @@
 
 /*--------------- REGISTER ---------------- */
 
+
 void Server::try_register(Client *client)
 {
     if (client->pass_ok && client->nick_set && client->user_set && !client->registered)
     {
         client->registered = true;
-        reply(client, "001", "", "Welcome to the IRC network");
-        reply(client, "002", "", "Your host is IRC, running version 1.0");
-        reply(client, "003", "", "This server was created today");
-        reply(client, "004", "", "IRC 1.0");
+
+        std::string rpl_welcome = "Welcome to the Internet Relay Network " + prefix(*client);
+        reply(client, "001", "", rpl_welcome);
+
+        std::string rpl_yourhost = "Your host is IRC_Server, running version 1.0";
+        reply(client, "002", "", rpl_yourhost);
+
+        std::time_t now = std::time(NULL);
+        std::string time_str = std::ctime(&now);
+        
+        if (!time_str.empty() && time_str[time_str.size() - 1] == '\n')
+            time_str.erase(time_str.size() - 1);
+
+        std::string rpl_created = "This server was created " + time_str;
+        reply(client, "003", "", rpl_created);
+
+        std::string rpl_myinfo = "IRC_Server 1.0 i itkl";
+        reply(client, "004", "", rpl_myinfo);
     }
 }
-
 
 /* ---------------- COMMANDS (logic ) ---------------- */
 
@@ -21,7 +35,7 @@ bool Server::nickname_exists(const std::string &nick)
 {
     for (size_t i = 0; i < clients.size(); i++)
     {
-        if (clients[i].nickname == nick)
+        if (irc_equal(clients[i].nickname,nick))
             return true;
     }
     return false;
@@ -31,6 +45,31 @@ bool Server::is_special_char(char c)
     return (c == '[' ||c == ']' ||c == '\\' ||c == '`' ||
             c == '_' ||c == '^' || c == '{' ||c == '|' ||
             c == '}');
+}
+bool Server::irc_equal(const std::string &a, const std::string &b)
+{
+    if (a.size() != b.size()) 
+        return false;
+
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        char ca = std::tolower(static_cast<unsigned char>(a[i]));
+        char cb = std::tolower(static_cast<unsigned char>(b[i]));
+
+        if (ca == '{')      ca = '[';
+        else if (ca == '}') ca = ']';
+        else if (ca == '|') ca = '\\';
+        else if (ca == '^') ca = '~';
+
+        if (cb == '{')      cb = '[';
+        else if (cb == '}') cb = ']';
+        else if (cb == '|') cb = '\\';
+        else if (cb == '^') cb = '~';
+
+        if (ca != cb) 
+            return false;
+    }
+    return true;
 }
 bool Server::is_valid_nick(const std::string &nick)
 {
@@ -44,12 +83,13 @@ bool Server::is_valid_nick(const std::string &nick)
         !is_special_char(nick[0]))
         return false;
 
-    for (size_t i = 0; i < nick.size(); i++)
+    for (size_t i = 1; i < nick.size(); i++)
     {
         if (!std::isalpha(static_cast<unsigned char>(nick[i])) &&
             !std::isdigit(static_cast<unsigned char>(nick[i])) &&
-            !is_special_char(nick[i]))
-            return false;
+            !is_special_char(nick[i]) &&
+             nick[i] != '-')
+        return false;
     }
 
     return true;
@@ -70,12 +110,12 @@ void Server::nick_command(Client *client, Command command)
         return;
     }
 
-    if(nickname_exists(command.params[0]) && client->nickname != command.params[0])
+    if(nickname_exists(command.params[0]) && !irc_equal(client->nickname,command.params[0]) )
     {
         reply(client, "433", command.params[0], "Nickname is already in use");
         return;
     }
-    if(client->registered && client->nickname != command.params[0])
+    if(client->registered && !irc_equal(client->nickname,command.params[0]))
     {
         std::string old_nick = client->nickname;
         std::string msg = prefix(*client)+ " NICK :" + command.params[0];
