@@ -154,25 +154,45 @@ void Server::pass_command(Client *client, Command command)
     client->pass_ok = true;
 }
 
+// void Server::user_command(Client *client, Command command)
+// {
+    // if (client->user_set)
+    // {
+        // reply(client, "462", "USER", "You may not reregister"); // user can be set only once and only if not registered before unlike nickname
+        // return;
+    // }
+
+    // if (command.params.size() < 4)
+    // {
+        // reply(client, "461", "USER", "Not enough parameters");
+        // return;
+    // }
+    // client->username = command.params[0];
+    // client->realname = command.params.back();
+    // std::cout << client->realname << "\n";
+    // client->user_set = true;
+    // try_register(client);
+
+// }
 void Server::user_command(Client *client, Command command)
 {
-    if (client->user_set)
-    {
-        reply(client, "462", "USER", "You may not reregister"); // user can be set only once and only if not registered before unlike nickname
-        return;
-    }
-
     if (command.params.size() < 4)
     {
         reply(client, "461", "USER", "Not enough parameters");
         return;
     }
+    if (client->registered)
+    {
+        reply(client, "462", "", "You may not reregister");
+        return;
+    }
+
     client->username = command.params[0];
-    client->realname = command.params.back();
-    std::cout << client->realname << "\n";
+    client->realname = command.params[3]; // Always trust index 3 all params are equal!
+
+    
     client->user_set = true;
     try_register(client);
-
 }
 void Server::privmsg_command(Client *client, Command command) //just a place_holder so i can make my boot you can replace it by you actual command 
 {
