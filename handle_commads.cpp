@@ -176,8 +176,11 @@ void Server::handle_command(Client *client, Command command)
         inviteCommand(client, command.params);
     else if (command.cmd == "KICK")
         kickCommand(client, command.params);
+    
     else if (command.cmd == "QUIT")
         quitCommand(client, command.params);
+    else if (command.cmd == "TOPIC")
+        topicCommand(client, command.params);
 
     /////
     
@@ -291,7 +294,7 @@ Command Server::parse_command(std::string command_)
 
     if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT") //prv msg should go here 
+    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT" || tmp.cmd == "TOPIC") //prv msg should go here 
         command = dispatch_user(tmp);
 
     return(command);

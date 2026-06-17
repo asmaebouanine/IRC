@@ -1,5 +1,6 @@
 #include "Server.hpp"
 
+//QUIT
 void Server::quitCommand(Client *client, std::vector<std::string> params)
 {
     std::string reason;
@@ -12,7 +13,7 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
     if (!reason.empty() && reason[0] == ':')
         reason = reason.substr(1);//remove the : 
     //build the msg 
-    std::string msg = prefix(*client) + "QUIT :" + reason;
+    std::string msg = prefix(*client) + " QUIT :" + reason;
     //notify channels + clean up
     for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); it++)
     {
@@ -26,7 +27,65 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
     }
     send_to_client(client->fd, "ERROR :Closing Link: " + client->hostname + " (Quit: " + reason + ")");
     remove_client(client->fd);
-    // shutdown(client->fd, SHUT_RDWR); 
-    //msg properly displayed 
-    //test with irssi
+   //test in mac
+}
+
+//TOPIC
+// void Server::topicCommand(Client *client, std::vector<std::string> params)
+// {
+     
+
+
+
+
+
+// }
+
+
+
+void Server::topicCommand(Client *client, std::vector<std::string> params)
+{
+    if (params.empty())
+    {
+        reply(client, "461", "TOPIC", "Not enough parameters");
+        return;
+    }
+
+    std::string chanName = params[0];
+
+    Channel *channel = findChannel(chanName);
+    if (!channel)
+    {
+        reply(client, "403", chanName, "No such channel");
+        return;
+    }
+    if (!channel->isMember(client->fd))
+    {
+        reply(client, "442", chanName, "You're not on that channel");
+        return;
+    }
+
+    // no second param = user wants to READ the topic
+    if (params.size() == 1)
+    {
+        if (channel->getTopic().empty())
+            send_to_client(client->fd, ":" + SERVER_NAME + " 331 " + client->nickname + " " + chanName + " :No topic is set");
+        else
+            send_to_client(client->fd, ":" + SERVER_NAME + " 332 " + client->nickname + " " + chanName + " :" + channel->getTopic());
+        return;
+    }
+
+    // second param exists = user wants to SET the topic
+    if (channel->isTopicRestricted() && !channel->isOperator(client->fd))
+    {
+        reply(client, "482", chanName, "You're not channel operator");
+        return;
+    }
+
+    std::string newTopic = params[1];
+    channel->setTopic(newTopic);
+
+    // broadcast the change to everyone in the channel
+    std::string msg = prefix(*client) + " TOPIC " + chanName + " :" + newTopic;
+    broadcast(channel, msg, -1);
 }

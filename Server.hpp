@@ -106,6 +106,7 @@ class Server
 
         //comms
         void quitCommand(Client *client, std::vector<std::string> params);
+        void topicCommand(Client *client, std::vector<std::string> params);
 
 };
 
