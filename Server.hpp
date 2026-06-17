@@ -104,6 +104,9 @@ class Server
         static void signal_handler(int sig); // so i dond need an object to call it i sued static
         void reply(Client *client, const std::string &code, const std::string &command, const std::string &message);
 
+        //comms
+        void quitCommand(Client *client, std::vector<std::string> params);
+
 };
 
 #endif
