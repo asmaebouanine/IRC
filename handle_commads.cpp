@@ -292,9 +292,9 @@ Command Server::parse_command(std::string command_)
     tmp = command_name(command_);
     capitalize_command(tmp.cmd);
 
-    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
+    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK" || tmp.cmd == "TOPIC")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT" || tmp.cmd == "TOPIC") //prv msg should go here 
+    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT") //prv msg should go here 
         command = dispatch_user(tmp);
 
     return(command);

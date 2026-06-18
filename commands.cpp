@@ -31,17 +31,6 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
 }
 
 //TOPIC
-// void Server::topicCommand(Client *client, std::vector<std::string> params)
-// {
-     
-
-
-
-
-
-// }
-
-
 
 void Server::topicCommand(Client *client, std::vector<std::string> params)
 {
@@ -65,7 +54,7 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    // no second param = user wants to READ the topic
+    // no second param (dosnt read the :)
     if (params.size() == 1)
     {
         if (channel->getTopic().empty())
@@ -75,7 +64,7 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    // second param exists = user wants to SET the topic
+    // second param exists = user wants to SET the topic ( should include the  clear topic case )
     if (channel->isTopicRestricted() && !channel->isOperator(client->fd))
     {
         reply(client, "482", chanName, "You're not channel operator");
@@ -85,7 +74,6 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
     std::string newTopic = params[1];
     channel->setTopic(newTopic);
 
-    // broadcast the change to everyone in the channel
-    std::string msg = prefix(*client) + " TOPIC " + chanName + " :" + newTopic;
+    std::string msg = prefix(*client) + " TOPIC " + chanName  + " :" + newTopic;
     broadcast(channel, msg, -1);
 }
