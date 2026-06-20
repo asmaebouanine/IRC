@@ -5,13 +5,14 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
 {
     std::string reason;
 
-    if (params.empty())
+    if (params.empty()  || params[0].empty())
         reason = "Quit"; //default to quit 
     else 
         reason = params[0];
     
-    if (!reason.empty() && reason[0] == ':')
-        reason = reason.substr(1);//remove the : 
+    // if (!reason.empty() && reason[0] == ':')
+    //     reason = reason.substr(1);//remove the : 
+
     //build the msg 
     std::string msg = prefix(*client) + " QUIT :" + reason;
     //notify channels + clean up
@@ -31,7 +32,6 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
 }
 
 //TOPIC
-
 void Server::topicCommand(Client *client, std::vector<std::string> params)
 {
     if (params.empty())
@@ -54,7 +54,7 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    // no second param (dosnt read the :)
+    // read topic mode 
     if (params.size() == 1)
     {
         if (channel->getTopic().empty())
@@ -64,13 +64,13 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    // second param exists = user wants to SET the topic ( should include the  clear topic case )
     if (channel->isTopicRestricted() && !channel->isOperator(client->fd))
     {
         reply(client, "482", chanName, "You're not channel operator");
         return;
     }
-
+    
+    //set topic mode 
     std::string newTopic = params[1];
     channel->setTopic(newTopic);
 

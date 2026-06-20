@@ -198,7 +198,7 @@ Command Server::dispatch_user(tmp_cmd tmp)
 
     std::string before_colon;
     std::string after_colon;
-
+    bool has_colon = false;//this too
 
 
     command.cmd = tmp.cmd;
@@ -206,6 +206,7 @@ Command Server::dispatch_user(tmp_cmd tmp)
 
     if(colon_index != std::string::npos)
     {
+        has_colon = true;//added this
         before_colon = tmp.arg.substr(0, colon_index);
         after_colon = tmp.arg.substr(colon_index + 1); 
     }
@@ -226,7 +227,8 @@ Command Server::dispatch_user(tmp_cmd tmp)
         command.params.push_back(before_colon.substr(0, space));
         before_colon = before_colon.substr(space + 1);
     }
-    if(!after_colon.empty())
+    // if(!after_colon.empty())
+    if(has_colon)
         command.params.push_back(after_colon);
 
     return(command);
@@ -292,9 +294,9 @@ Command Server::parse_command(std::string command_)
     tmp = command_name(command_);
     capitalize_command(tmp.cmd);
 
-    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK" || tmp.cmd == "TOPIC")
+    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT") //prv msg should go here 
+    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC") //prv msg should go here 
         command = dispatch_user(tmp);
 
     return(command);
