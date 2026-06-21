@@ -76,4 +76,58 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
 
     std::string msg = prefix(*client) + " TOPIC " + chanName  + " :" + newTopic;
     broadcast(channel, msg, -1);
+    //check if the 333 topicwhotime is necessary
+}
+
+//PRVMSG
+//locate targets then send a msg to each one if valid ofc
+void send_to_one_target(Client *client, const std::string &target, const std::string &text);
+{
+
+}
+
+std::vector<std::string> Server::splitTargets(std::string &targets)
+{
+    std::vector<std::string> result;
+    size_t start = 0;
+    size_t comma_pos;
+
+    while (start <= targets.size())
+    {
+        comma_pos = targets.find(',', start;)
+        std::string target;
+        if (comma_pos == std::string::npos)
+        {
+            target = targets.substr(start);
+            start = targets.size() + 1;
+        }
+        else 
+        {
+            target = targets.substr(start, comma_pos - start);
+            start = targets.size() + 1;
+        }
+        if (!target.empty())
+            result.push_back(target);
+    }
+    return result;
+}
+
+void Server::privmsgCommand(Client *client, std::vector<std::string> params)
+{
+    if (params.empty())
+    {
+        reply(client, "411", "", "No recipient given (PRIVMSG)");
+        return;
+    }
+    if (params.size() < 2 || params[1].empty())
+    {
+        reply(client, "412", "", "No text to send");
+        return;
+    }
+
+    std::string text = params[1];
+    std::vector<std::sting> targetlist = splitTargets(params[0]);
+
+    for(size_t i = 0; i < targetlist.size(); i++)
+        send_to_one_target(client, targetlist[i], text);
 }

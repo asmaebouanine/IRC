@@ -107,6 +107,8 @@ class Server
         //comms
         void quitCommand(Client *client, std::vector<std::string> params);
         void topicCommand(Client *client, std::vector<std::string> params);
+        void privmsgCommand(Client *client, std::vector<std::string> params);
+        void send_to_one_target(Client *client, const std::string &target, const std::string &text);
 
 };
 
