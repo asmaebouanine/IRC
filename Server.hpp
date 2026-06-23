@@ -109,6 +109,7 @@ class Server
         void topicCommand(Client *client, std::vector<std::string> params);
         void privmsgCommand(Client *client, std::vector<std::string> params);
         void send_to_one_target(Client *client, const std::string &target, const std::string &text);
+        std::vector<std::string> splitTargets(std::string &targets);
 
 };
 

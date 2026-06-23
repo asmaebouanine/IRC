@@ -81,10 +81,36 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
 
 //PRVMSG
 //locate targets then send a msg to each one if valid ofc
-void send_to_one_target(Client *client, const std::string &target, const std::string &text);
+void Server::send_to_one_target(Client *client, const std::string &target, const std::string &text)
 {
+    //channel or client ? valid ? >> send 
+    std::string msg = prefix(*client) + " PRIVMSG " + target + " :" + text;
 
+    if (target[0] == '#')
+    {
+        Channel *channel = findChannel(target);
+        if (!channel)
+        {
+            reply(client, "403", target, "No such channel");
+            return;
+        }
+        if (!channel->isMember(client->fd))
+        {
+            reply(client, "404", target, "Cannot send to channel");
+            return;
+        }
+        broadcast(channel, msg, client->fd);
+        return;
+    }
+    Client *targetClient = findClientByNick(target);
+    if (!targetClient)
+    {
+        reply(client, "401", target, "No such nick/channel");
+        return;
+    }
+    send_to_client(targetClient->fd, msg);
 }
+
 
 std::vector<std::string> Server::splitTargets(std::string &targets)
 {
@@ -94,7 +120,7 @@ std::vector<std::string> Server::splitTargets(std::string &targets)
 
     while (start <= targets.size())
     {
-        comma_pos = targets.find(',', start;)
+        comma_pos = targets.find(',', start);
         std::string target;
         if (comma_pos == std::string::npos)
         {
@@ -104,7 +130,7 @@ std::vector<std::string> Server::splitTargets(std::string &targets)
         else 
         {
             target = targets.substr(start, comma_pos - start);
-            start = targets.size() + 1;
+            start = comma_pos + 1;
         }
         if (!target.empty())
             result.push_back(target);
@@ -126,8 +152,10 @@ void Server::privmsgCommand(Client *client, std::vector<std::string> params)
     }
 
     std::string text = params[1];
-    std::vector<std::sting> targetlist = splitTargets(params[0]);
+    std::vector<std::string> targetlist = splitTargets(params[0]);
 
     for(size_t i = 0; i < targetlist.size(); i++)
         send_to_one_target(client, targetlist[i], text);
 }
+
+//MODE
