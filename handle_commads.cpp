@@ -115,11 +115,43 @@ void Server::nick_command(Client *client, Command command)
         reply(client, "433", command.params[0], "Nickname is already in use");
         return;
     }
-    if(client->registered && !irc_equal(client->nickname,command.params[0]))
+    if (client->registered && !irc_equal(client->nickname, command.params[0]))
     {
         std::string old_nick = client->nickname;
-        std::string msg = prefix(*client)+ " NICK :" + command.params[0];
-        send_to_client(client->fd, msg);
+        std::map<std::string, Channel*>::iterator it;
+        std::vector<int> notified_fds;
+
+        std::string msg = prefix(*client) + " NICK :" + command.params[0];
+        
+        send_to_client(client->fd, msg); 
+        notified_fds.push_back(client->fd);
+
+        for (it = channels.begin(); it != channels.end(); ++it)
+        {
+            if (!it->second->isMember(client->fd))
+                continue;
+
+            std::vector<int> members = it->second->getMembers();
+            for (size_t i = 0; i < members.size(); i++)
+            {
+                bool is_notified = false; 
+
+                for (size_t j = 0; j < notified_fds.size(); j++)
+                {
+                    if (notified_fds[j] == members[i])
+                    {
+                        is_notified = true;
+                        break;
+                    }
+                }
+
+                if (!is_notified)
+                {
+                    send_to_client(members[i], msg);
+                    notified_fds.push_back(members[i]);
+                }
+            }
+        }
     }
     client->nickname = command.params[0];
     client->nick_set = true;
