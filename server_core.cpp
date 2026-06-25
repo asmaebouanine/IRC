@@ -43,7 +43,7 @@ void Server::server_setup()
         return;
     }
 
-    if (listen(server_fd, 10) == -1)
+    if (listen(server_fd, SOMAXCONN) == -1)
     {
         std::cout << "listening failed \n";
         close(server_fd);
@@ -72,7 +72,7 @@ void Server::server_core()
     
         if (poll(fds.data(), fds.size(), -1) < 0)
         {
-            std::cout << "poll failed\n";
+            std::cout << "server shuts down\n";
             break;
         }
 

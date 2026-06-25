@@ -25,6 +25,8 @@
 
 bool parse_port(const std::string& str, int& port)
 {
+    char *end;
+
     if (str.empty())
         return false;
 
@@ -34,7 +36,9 @@ bool parse_port(const std::string& str, int& port)
             return false;
     }
 
-    long val = std::strtol(str.c_str(), NULL, 10);
+    long val = std::strtol(str.c_str(), &end, 10);
+    if (*end != '\0')
+        return(false);
     if (val < 1024 || val > 65535)
         return false;
     port = static_cast<int>(val);

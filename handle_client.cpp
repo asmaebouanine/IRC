@@ -43,7 +43,7 @@ void Server::handle_new_client()
    
     while (true)
     {
-         sockaddr_in addr;
+        sockaddr_in addr;
         socklen_t len = sizeof(addr);
 
         int client_fd = accept(server_fd, (sockaddr*)&addr, &len);

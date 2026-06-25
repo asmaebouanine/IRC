@@ -57,7 +57,7 @@ class Server
     public:
         Server(int port,const std::string Password);
         ~Server();
-
+        static void signal_handler(int sig);
         void run();
 
     private:
@@ -103,7 +103,6 @@ class Server
         void check_buffer(Client *client);
         int parse_port(std::string port);
         void remove_client(int fd);
-        static void signal_handler(int sig); // so i dond need an object to call it i sued static
         void reply(Client *client, const std::string &code, const std::string &command, const std::string &message);
         void privmsg_command(Client *client, Command command);
 };
