@@ -160,14 +160,10 @@ void Server::nick_command(Client *client, Command command)
 
 void Server::pass_command(Client *client, Command command)
 {
-    // if (client->pass_ok)
-    // {
-    //     reply(client, "462", "PASS", "You may not reregister");
-    //     return;
-    // }
+    
     if(client->registered)
     {
-        reply(client, "462", "", "You may not reregister");
+        reply(client, "462", "", "Unauthorized command (already registered)");
         return;
     }
   
@@ -215,7 +211,7 @@ void Server::user_command(Client *client, Command command)
     }
     if (client->registered)
     {
-        reply(client, "462", "", "You may not reregister");
+        reply(client, "462", "", "Unauthorized command (already registered)");
         return;
     }
 
@@ -409,7 +405,7 @@ tmp_cmd Server::command_name(std::string command_)
 
     std::string rest;
     
-    size_t index = command_.find_first_not_of(" \t");
+    size_t index = command_.find_first_not_of(" \t"); // skipping trailing spaces
 
     if(index == std::string::npos)
         return(tmp);
@@ -459,5 +455,5 @@ void Server::check_buffer(Client *client)
 
         handle_command(client, command);
         client->buffer.erase(0, pos + 1);
-    }
+    } 
 }
