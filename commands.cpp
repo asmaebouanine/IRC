@@ -159,3 +159,95 @@ void Server::privmsgCommand(Client *client, std::vector<std::string> params)
 }
 
 //MODE
+//syntax : MODE <channel> <mode> <params>
+void Server::handle_mode(Client *client, Channel *channel, std::vector<std::string> params)
+{
+    std::string mode = params[1];
+    char sign = '+';
+
+    for(size_t i = 0; i < mode.size() ; i++)
+    {
+        if(mode[i] == '+' || mode[i] == '-')
+        {
+            sign = mode[i];
+            continue;
+        }
+    if(mode[i] == 'i')
+        channel->setInviteOnly(sign == '+');
+    else if (mode[i] == 't')
+        channel->setTopicRestricted(sign == '+');
+    // else if (mode[i] == 'o')
+    // {
+
+    // }
+    // +/- o 
+    // +/- k
+    // +/- l
+    }
+    //display mode changes
+    std::string msg = prefix(*client) + " MODE " + params[0] + " " + mode ;
+    for (size_t i = 2; i < params.size() ; i++)
+        msg += " " + params[i];
+    broadcast(channel, msg, -1);
+}
+
+void Server::modeCommand(Client *client, std::vector<std::string> params)
+{
+    //parse
+    if (params.empty())
+    {
+        reply(client, "461", "MODE", "Not enough parameters");
+        return;
+    }
+
+    if(params[0][0] != '#')
+    {
+        reply(client, "501", "MODE", "MODE only supports channels"); //custom err msg check if necessary 
+        return;
+    }
+    std::string chanName = params[0];
+
+    Channel *channel = findChannel(chanName);
+    if (!channel)
+    {
+        reply(client, "403", chanName, "No such channel");
+        return;
+    }
+    if (!channel->isMember(client->fd))
+    {
+        reply(client, "442", chanName, "You're not on that channel");
+        return;
+    }
+    if (!channel->isOperator(client->fd))
+    {
+        reply(client, "482", chanName, "You are not channel operator");
+        return;
+    }
+    //no third param
+    if (params.size() < 2)
+    {
+        std::string curr_mode = "+";
+        if(channel->isInviteOnly())
+            curr_mode += "i";
+        if(channel->isTopicRestricted()) 
+            curr_mode += "t";
+        if(!channel->getKey().empty())
+            curr_mode += "k";
+        send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + curr_mode);
+        return;
+    }
+
+    //valid mode ? handle it 
+    std::string mode = params[1];
+    for (size_t i = 0; i < mode.size(); i++)
+    {
+        if (mode[i] != '+' && mode[i] != '-' && mode[i] != 'i' && mode[i] != 't' && mode[i] != 'o' && mode[i] != 'k' && mode[i] != 'l')
+        {
+           reply(client, "472", "", " :is unknown mode char to me");
+           return;
+        }
+            
+    }
+    handle_mode(client, channel ,params);
+
+}

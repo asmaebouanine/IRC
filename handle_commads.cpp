@@ -183,9 +183,8 @@ void Server::handle_command(Client *client, Command command)
         topicCommand(client, command.params);
     else if (command.cmd == "PRIVMSG")
         privmsgCommand(client, command.params);
-
-    /////
-    
+    else if (command.cmd == "MODE")
+        modeCommand(client, command.params);
     else
         reply(client, "421", command.cmd, "Unknown command");
 }
@@ -296,9 +295,9 @@ Command Server::parse_command(std::string command_)
     tmp = command_name(command_);
     capitalize_command(tmp.cmd);
 
-    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
+    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK" || tmp.cmd == "MODE")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC" || tmp.cmd == "PRIVMSG") //prv msg should go here 
+    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC" || tmp.cmd == "PRIVMSG")
         command = dispatch_user(tmp);
 
     return(command);
