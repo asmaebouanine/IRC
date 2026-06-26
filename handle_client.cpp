@@ -113,6 +113,19 @@ void Server::handle_client(int client_fd)
 
 void Server::remove_client(int fd)
 {
+    for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end();)
+    {
+        it->second->removeMember(fd);
+        it->second->removeOperator(fd);
+        if (it->second->isEmpty())
+        {
+            delete it->second;
+            channels.erase(it++);
+        }
+        else
+            ++it;
+    }
+
     for (size_t i = 0; i < clients.size(); i++)
     {
         if (clients[i].fd == fd)
