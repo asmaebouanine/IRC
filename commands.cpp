@@ -164,6 +164,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
 {
     std::string mode = params[1];
     char sign = '+';
+    size_t params_index = 2;
 
     for(size_t i = 0; i < mode.size() ; i++)
     {
@@ -173,22 +174,100 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
             continue;
         }
     if(mode[i] == 'i')
+    {
         channel->setInviteOnly(sign == '+');
-    else if (mode[i] == 't')
-        channel->setTopicRestricted(sign == '+');
-    // else if (mode[i] == 'o')
-    // {
-
-    // }
-    // +/- o 
-    // +/- k
-    // +/- l
+        std::string msg = prefix(*client) + " MODE " + params[0] + " " + sign + "i" ;
+        broadcast(channel, msg, -1);
     }
-    //display mode changes
-    std::string msg = prefix(*client) + " MODE " + params[0] + " " + mode ;
-    for (size_t i = 2; i < params.size() ; i++)
-        msg += " " + params[i];
-    broadcast(channel, msg, -1);
+    else if (mode[i] == 't')
+    {
+        channel->setTopicRestricted(sign == '+');
+        std::string msg = prefix(*client) + " MODE " + params[0] + " " + sign + "t" ;
+        broadcast(channel, msg, -1);
+    }
+    // +/- o 
+    else if (mode[i] == 'o')
+    {
+        if(params_index >= params.size())
+        {
+            reply(client, "461", "MODE", ":Not enough parameters");
+            return;
+        }
+        Client *target = findClientByNick(params[params_index]);
+        if (!target || !channel->isMember(target->fd))
+        {
+            send_to_client(client->fd, ":" + SERVER_NAME + " 441 " + client->nickname + " " + params[params_index] + " " + channel->getName() + " :They aren't on that channel");
+            params_index++;
+            continue;
+        }
+        if (sign == '+') //grant op privilege
+        {
+            channel->addOperator(target->fd);
+            std::string msg = prefix(*client) + " MODE " + params[0] + " +o " + params[params_index];
+            broadcast(channel, msg, -1);
+        }
+        else
+        {
+            channel->removeOperator(target->fd);
+            std::string msg = prefix(*client) + " MODE " + params[0] + " -o " + params[params_index];
+            broadcast(channel, msg, -1);
+        }
+        params_index++;
+    }
+    // +/- k
+    else if (mode[i] == 'k')
+    {
+        if (sign == '+')
+        {    
+            if(params_index >= params.size())
+            {
+                reply(client, "461", "MODE", ":Not enough parameters");
+                return;
+            }
+            channel->setKey(params[params_index]);
+            std::string msg = prefix(*client) + " MODE " + params[0] + " +k " + params[params_index];
+            broadcast(channel, msg, -1);
+            params_index++;
+        }
+        else
+        {
+            channel->setKey("");
+            std::string msg = prefix(*client) + " MODE " + params[0] + " -k";
+            broadcast(channel, msg, -1);
+        }
+    }
+    // +/- l
+    else if (mode[i] == 'l')
+    {
+        if(sign == '+')
+        {
+            if(params_index >= params.size())
+            {
+                reply(client, "461", "MODE", "Not enough parameters");
+                return;
+            }
+            int limit = std::atoi(params[params_index].c_str());
+            if (limit <= 0)
+            {
+                reply(client, "696", "MODE", "Invalid limit mode parameter. Syntax: <limit>");
+                params_index++;
+                continue;
+            }
+            channel->setUserLimit(limit);
+            std::string msg = prefix(*client) + " MODE " + params[0] + " +l " + params[params_index];
+            broadcast(channel, msg, -1);
+            params_index++;
+        }
+        else 
+        {
+            channel->setUserLimit(0);
+            std::string msg = prefix(*client) + " MODE " + params[0] + " -l";
+            broadcast(channel, msg, -1);
+        }
+    }
+    else 
+        reply(client, "472", std::string(1, mode[i]), "is unknown mode char to me");
+    }
 }
 
 void Server::modeCommand(Client *client, std::vector<std::string> params)
@@ -223,7 +302,7 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
         reply(client, "482", chanName, "You are not channel operator");
         return;
     }
-    //no third param
+    
     if (params.size() < 2)
     {
         std::string curr_mode = "+";
@@ -233,21 +312,9 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
             curr_mode += "t";
         if(!channel->getKey().empty())
             curr_mode += "k";
-        send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + curr_mode);
+        send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + chanName + " " + curr_mode);
         return;
     }
-
-    //valid mode ? handle it 
-    std::string mode = params[1];
-    for (size_t i = 0; i < mode.size(); i++)
-    {
-        if (mode[i] != '+' && mode[i] != '-' && mode[i] != 'i' && mode[i] != 't' && mode[i] != 'o' && mode[i] != 'k' && mode[i] != 'l')
-        {
-           reply(client, "472", "", " :is unknown mode char to me");
-           return;
-        }
-            
-    }
-    handle_mode(client, channel ,params);
-
+    //valid mode ? handle it     
+    handle_mode(client, channel ,params);   
 }

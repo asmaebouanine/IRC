@@ -299,7 +299,8 @@ Command Server::parse_command(std::string command_)
         command = dispatch_pass_nick(tmp);
     else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC" || tmp.cmd == "PRIVMSG")
         command = dispatch_user(tmp);
-
+    else 
+        command.cmd = tmp.cmd;//added this so that wrong commands are not treated as empty command in handle_command
     return(command);
 }
 
