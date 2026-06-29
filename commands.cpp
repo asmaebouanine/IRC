@@ -9,12 +9,10 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
         reason = "Quit"; //default to quit 
     else 
         reason = params[0];
-    
-    // if (!reason.empty() && reason[0] == ':')
-    //     reason = reason.substr(1);//remove the : 
 
     //build the msg 
     std::string msg = prefix(*client) + " QUIT :" + reason;
+
     //notify channels + clean up
     for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); it++)
     {
@@ -28,7 +26,6 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
     }
     send_to_client(client->fd, "ERROR :Closing Link: " + client->hostname + " (Quit: " + reason + ")");
     remove_client(client->fd);
-   //test in mac
 }
 
 //TOPIC
@@ -63,7 +60,6 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
             send_to_client(client->fd, ":" + SERVER_NAME + " 332 " + client->nickname + " " + chanName + " :" + channel->getTopic());
         return;
     }
-
     if (channel->isTopicRestricted() && !channel->isOperator(client->fd))
     {
         reply(client, "482", chanName, "You're not channel operator");
@@ -76,7 +72,6 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
 
     std::string msg = prefix(*client) + " TOPIC " + chanName  + " :" + newTopic;
     broadcast(channel, msg, -1);
-    //check if the 333 topicwhotime is necessary
 }
 
 //PRVMSG
@@ -279,13 +274,7 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    if(params[0][0] != '#')
-    {
-        reply(client, "501", "MODE", "MODE only supports channels"); //custom err msg check if necessary 
-        return;
-    }
     std::string chanName = params[0];
-
     Channel *channel = findChannel(chanName);
     if (!channel)
     {
@@ -303,6 +292,7 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
         return;
     }
     
+    //what mode is it?
     if (params.size() < 2)
     {
         std::string curr_mode = "+";
