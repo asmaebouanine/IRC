@@ -6,7 +6,7 @@ void Server::server_setup()
 
     memset(&addr, 0, sizeof(addr));
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    server_fd = socket(AF_INET, SOCK_STREAM, 0); // IPPROTO_TCP
     if (server_fd == -1)
     {
         std::cout << "socket failed \n";

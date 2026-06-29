@@ -26,6 +26,8 @@ void Server::try_register(Client *client)
 
         std::string rpl_myinfo = "IRC_Server 1.0 i itkl";
         reply(client, "004", "", rpl_myinfo);
+        std::string pref = prefix(*client);
+        std::cout << pref << " has connected to " << SERVER_NAME << std::endl;
     }
 }
 
