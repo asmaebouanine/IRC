@@ -104,7 +104,15 @@ class Server
         int parse_port(std::string port);
         void remove_client(int fd);
         void reply(Client *client, const std::string &code, const std::string &command, const std::string &message);
-        void privmsg_command(Client *client, Command command);
+
+        //comms
+        void quitCommand(Client *client, std::vector<std::string> params);
+        void topicCommand(Client *client, std::vector<std::string> params);
+        void privmsgCommand(Client *client, std::vector<std::string> params);
+        void send_to_one_target(Client *client, const std::string &target, const std::string &text);
+        std::vector<std::string> splitTargets(std::string &targets);
+        void modeCommand(Client *client, std::vector<std::string> params);
+        void handle_mode(Client *client, Channel *channel, std::vector<std::string> params);
 };
 
 #endif

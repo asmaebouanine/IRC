@@ -224,59 +224,6 @@ void Server::user_command(Client *client, Command command)
     client->user_set = true;
     try_register(client);
 }
-void Server::privmsg_command(Client *client, Command command) //just a place_holder so i can make my boot you can replace it by you actual command 
-{
-    // 1. Check if a target (nickname or channel) was provided
-    if (command.params.empty())
-    {
-        reply(client, "411", "", "No recipient given (PRIVMSG)");
-        return;
-    }
-
-    // 2. Check if the actual message text was provided
-    if (command.params.size() < 2 || command.params[1].empty())
-    {
-        reply(client, "412", "", "No text to send");
-        return;
-    }
-
-    std::string target = command.params[0];
-    std::string text = command.params[1];
-
-    // 3. CASE A: The message is sent to a CHANNEL (starts with '#')
-    if (target[0] == '#')
-    {
-        // TODO: Once you implement channels, look up the channel by 'target'
-        // and broadcast 'text' to everyone in that channel except the 'client'.
-        return;
-    }
-
-    // 4. CASE B: The message is a Private Message (User-to-User / User-to-Bot)
-    Client *target_client = NULL;
-
-    // Loop through your clients vector to find the target nickname
-    for (size_t i = 0; i < clients.size(); i++)
-    {
-        if (clients[i].nickname == target)
-        {
-            target_client = &clients[i];
-            break;
-        }
-    }
-
-    // If the nickname doesn't exist, send the standard IRC error numeric 401
-    if (target_client == NULL)
-    {
-        reply(client, "401", target, "No such nick/channel");
-        return;
-    }
-
-    // 5. Format and send the message
-    // Official IRC format: :SenderNick!SenderUser@Host PRIVMSG TargetNick :Message\r\n
-    std::string formatted_msg = ":" + client->nickname + "!" + client->username + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
-    
-    send(target_client->fd, formatted_msg.c_str(), formatted_msg.size(), 0);
-}
 
 /* ---------------- COMMAND HANDLER ---------------- */
 
@@ -316,14 +263,21 @@ void Server::handle_command(Client *client, Command command)
         user_command(client, command);
     else if (command.cmd == "JOIN")
         joinCommand(client, command.params);
-    else if (command.cmd == "PRIVMSG")
-        privmsg_command(client, command);
     else if (command.cmd == "PART")
         partCommand(client, command.params);
     else if (command.cmd == "INVITE")
         inviteCommand(client, command.params);
     else if (command.cmd == "KICK")
         kickCommand(client, command.params);
+
+    else if (command.cmd == "QUIT")
+        quitCommand(client, command.params);
+    else if (command.cmd == "TOPIC")
+        topicCommand(client, command.params);
+    else if (command.cmd == "PRIVMSG")
+        privmsgCommand(client, command.params);
+    else if (command.cmd == "MODE")
+        modeCommand(client, command.params);
     else
         reply(client, "421", command.cmd, "Unknown command");
 }
@@ -433,11 +387,12 @@ Command Server::parse_command(std::string command_)
     tmp = command_name(command_);
     capitalize_command(tmp.cmd);
 
-    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK")
+    if(tmp.cmd == "PASS" || tmp.cmd == "NICK" || tmp.cmd == "JOIN" || tmp.cmd == "PART" || tmp.cmd == "INVITE" || tmp.cmd == "KICK" || tmp.cmd == "MODE")
         command = dispatch_pass_nick(tmp);
-    else if(tmp.cmd == "USER" || tmp.cmd == "PRIVMSG")
+    else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC" || tmp.cmd == "PRIVMSG")
         command = dispatch_user(tmp);
-
+    else 
+        command.cmd = tmp.cmd;//added this so that wrong commands are not treated as empty command in handle_command
     return(command);
 }
 
