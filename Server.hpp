@@ -20,8 +20,6 @@
 #include <cctype>
 #include <ctime> 
 
-
-//ADD
 #include"Channel.hpp"
 #include<map>
 
@@ -50,9 +48,7 @@ class Server
         const std::string SERVER_PASSWORD;
         const std::string SERVER_NAME;
 
-        //   ADD
         std::map<std::string, Channel*> channels;
-        /////// 
 
     public:
         Server(int port,const std::string Password);
@@ -61,8 +57,6 @@ class Server
         void run();
 
     private:
-
-        // ADD
 
         Channel*    findChannel(const std::string& name);
         Client*     findClientByFd(int fd);
@@ -74,7 +68,6 @@ class Server
         void        partCommand(Client *client, std::vector<std::string> params);
         void        inviteCommand(Client *client, std::vector<std::string> params);
         void        kickCommand(Client *client, std::vector<std::string> params);
-        ////////
         
         void server_setup();
         void server_core();
