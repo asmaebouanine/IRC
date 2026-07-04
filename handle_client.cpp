@@ -37,7 +37,6 @@ bool Server::send_to_client(int fd, std::string msg)
     return true;
 }
 
-/* ---------------- CLIENT HANDLING ---------------- */
 void Server::handle_new_client()
 {
    
@@ -103,7 +102,7 @@ void Server::handle_client(int client_fd)
             {
                 std::cout << "Client buffer overflowed, dropping connection.\n";
                 remove_client(client_fd);
-                return; // Exit immediately since the client object and fd are now destroyed
+                return;
             }
             check_buffer(&clients[i]);
             break;

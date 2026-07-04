@@ -36,7 +36,7 @@ bool parse_port(const std::string& str, int& port)
     long val = std::strtol(str.c_str(), &end, 10);
     if (*end != '\0')
         return(false);
-    if (val < 1024 || val > 65535) // tcp port number is 16 bit with 2 posiiblities 0 and 1 so the max value is 2^16 = 65535
+    if (val < 1024 || val > 65535) 
         return false;
     port = static_cast<int>(val);
     return true;

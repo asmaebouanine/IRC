@@ -84,7 +84,7 @@ class Server
         bool is_valid_nick(const std::string &nick);
         void nick_command(Client *client, Command command);
         void pass_command(Client *client, Command command);
-        // void user_command(Client *client, std::string command);
+
         void user_command(Client *client, Command command);
         std::string prefix(Client &c);
         Command dispatch_pass_nick(tmp_cmd tmp);
@@ -98,7 +98,6 @@ class Server
         void remove_client(int fd);
         void reply(Client *client, const std::string &code, const std::string &command, const std::string &message);
 
-        //comms
         void quitCommand(Client *client, std::vector<std::string> params);
         void topicCommand(Client *client, std::vector<std::string> params);
         void privmsgCommand(Client *client, std::vector<std::string> params);

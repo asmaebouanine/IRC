@@ -8,7 +8,7 @@ Channel::Channel(const std::string& name)
       _inviteOnly(false),
       _topicRestricted(false)
       {}
-//getters
+
 const std::string& Channel::getName() const
 {
     return (_name);
@@ -34,14 +34,12 @@ bool Channel::isTopicRestricted() const
     return (_topicRestricted);
 }
 
-//setters
 void Channel::setTopic(const std::string& topic)    {_topic = topic;}
 void Channel::setKey(const std::string& key)        {_key = key;}
 void Channel::setUserLimit(int limit)               {_userLimit = limit;}
 void Channel::setInviteOnly(bool val)               {_inviteOnly = val;}
 void Channel::setTopicRestricted(bool val)          {_topicRestricted = val;}
 
-//members
 void Channel::addMember(int fd)
 {
     if (!isMember(fd))
@@ -70,7 +68,6 @@ bool Channel::isMember(int fd) const
     return false;
 }
 
-//operators
 void Channel::addOperator(int fd)
 {
     if (!isOperator(fd))
@@ -99,7 +96,6 @@ bool Channel::isOperator(int fd) const
     return false;
 }
 
-//invite
 void Channel::addInvite(int fd)
 {
     if (!isInvited(fd))
@@ -127,7 +123,6 @@ bool Channel::isInvited(int fd) const
     return false;
 }
 
-//utility
 bool Channel::isEmpty() const
 {
     return (_members.empty());

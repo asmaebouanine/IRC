@@ -1,7 +1,5 @@
 #include "Server.hpp"
 
-/*--------------- REGISTER ---------------- */
-
 
 void Server::try_register(Client *client)
 {
@@ -24,14 +22,14 @@ void Server::try_register(Client *client)
         std::string rpl_created = "This server was created " + time_str;
         reply(client, "003", "", rpl_created);
 
-        std::string rpl_myinfo = "IRC_Server 1.0 i itkl";
+        std::string rpl_myinfo = "IRC_Server 1.0  itklo";
         reply(client, "004", "", rpl_myinfo);
         std::string pref = prefix(*client);
         std::cout << pref << " has connected to " << SERVER_NAME << std::endl;
     }
 }
 
-/* ---------------- COMMANDS (logic ) ---------------- */
+
 
 bool Server::nickname_exists(const std::string &nick)
 {
@@ -184,26 +182,7 @@ void Server::pass_command(Client *client, Command command)
     client->pass_ok = true;
 }
 
-// void Server::user_command(Client *client, Command command)
-// {
-    // if (client->user_set)
-    // {
-        // reply(client, "462", "USER", "You may not reregister"); // user can be set only once and only if not registered before unlike nickname
-        // return;
-    // }
 
-    // if (command.params.size() < 4)
-    // {
-        // reply(client, "461", "USER", "Not enough parameters");
-        // return;
-    // }
-    // client->username = command.params[0];
-    // client->realname = command.params.back();
-    // std::cout << client->realname << "\n";
-    // client->user_set = true;
-    // try_register(client);
-
-// }
 void Server::user_command(Client *client, Command command)
 {
     if (command.params.size() < 4)
@@ -218,14 +197,13 @@ void Server::user_command(Client *client, Command command)
     }
 
     client->username = command.params[0];
-    client->realname = command.params[3]; // Always trust index 3 all params are equal!
+    client->realname = command.params[3];
 
     
     client->user_set = true;
     try_register(client);
 }
 
-/* ---------------- COMMAND HANDLER ---------------- */
 
 void Server::capitalize_command(std::string &command)
 {
@@ -284,7 +262,6 @@ void Server::handle_command(Client *client, Command command)
 
 
 
-/* ---------------- BUFFER ---------------- */
 Command Server::dispatch_user(tmp_cmd tmp)
 {
     Command command;
@@ -361,12 +338,12 @@ tmp_cmd Server::command_name(std::string command_)
 
     std::string rest;
     
-    size_t index = command_.find_first_not_of(" \t"); // skipping trailing spaces
+    size_t index = command_.find_first_not_of(" \t");
 
     if(index == std::string::npos)
         return(tmp);
 
-    rest = command_.substr(index); // the first not space char pos
+    rest = command_.substr(index);
 
     size_t space_pos = rest.find(' ');
     if(space_pos == std::string::npos)
@@ -392,7 +369,7 @@ Command Server::parse_command(std::string command_)
     else if(tmp.cmd == "USER" || tmp.cmd == "QUIT"  || tmp.cmd == "TOPIC" || tmp.cmd == "PRIVMSG")
         command = dispatch_user(tmp);
     else 
-        command.cmd = tmp.cmd;//added this so that wrong commands are not treated as empty command in handle_command
+        command.cmd = tmp.cmd;
     return(command);
 }
 
@@ -407,7 +384,6 @@ void Server::check_buffer(Client *client)
         command_ = client->buffer.substr(0, pos);
         if (!command_.empty() && (command_[command_.size() - 1] =='\r'))
             command_.erase(command_.size() - 1);
-        //add your command code here\n
         command = parse_command(command_);
 
         handle_command(client, command);

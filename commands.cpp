@@ -1,19 +1,17 @@
 #include "Server.hpp"
 
-//QUIT
+
 void Server::quitCommand(Client *client, std::vector<std::string> params)
 {
     std::string reason;
 
     if (params.empty()  || params[0].empty())
-        reason = "Quit"; //default to quit 
+        reason = "Quit";
     else 
         reason = params[0];
 
-    //build the msg 
     std::string msg = prefix(*client) + " QUIT :" + reason;
 
-    //notify channels + clean up
     for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); it++)
     {
         Channel *ch = it->second;
@@ -28,7 +26,6 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
     remove_client(client->fd);
 }
 
-//TOPIC
 void Server::topicCommand(Client *client, std::vector<std::string> params)
 {
     if (params.empty())
@@ -51,7 +48,6 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
 
-    // read topic mode 
     if (params.size() == 1)
     {
         if (channel->getTopic().empty())
@@ -66,7 +62,6 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
         return;
     }
     
-    //set topic mode 
     std::string newTopic = params[1];
     channel->setTopic(newTopic);
 
@@ -74,11 +69,8 @@ void Server::topicCommand(Client *client, std::vector<std::string> params)
     broadcast(channel, msg, -1);
 }
 
-//PRVMSG
-//locate targets then send a msg to each one if valid ofc
 void Server::send_to_one_target(Client *client, const std::string &target, const std::string &text)
 {
-    //channel or client ? valid ? >> send 
     std::string msg = prefix(*client) + " PRIVMSG " + target + " :" + text;
 
     if (target[0] == '#')
@@ -153,8 +145,6 @@ void Server::privmsgCommand(Client *client, std::vector<std::string> params)
         send_to_one_target(client, targetlist[i], text);
 }
 
-//MODE
-//syntax : MODE <channel> <mode> <params>
 void Server::handle_mode(Client *client, Channel *channel, std::vector<std::string> params)
 {
     std::string mode = params[1];
@@ -180,7 +170,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
         std::string msg = prefix(*client) + " MODE " + params[0] + " " + sign + "t" ;
         broadcast(channel, msg, -1);
     }
-    // +/- o 
+
     else if (mode[i] == 'o')
     {
         if(params_index >= params.size())
@@ -195,7 +185,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
             params_index++;
             continue;
         }
-        if (sign == '+') //grant op privilege
+        if (sign == '+')
         {
             channel->addOperator(target->fd);
             std::string msg = prefix(*client) + " MODE " + params[0] + " +o " + params[params_index];
@@ -209,7 +199,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
         }
         params_index++;
     }
-    // +/- k
+
     else if (mode[i] == 'k')
     {
         if (sign == '+')
@@ -231,7 +221,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
             broadcast(channel, msg, -1);
         }
     }
-    // +/- l
+
     else if (mode[i] == 'l')
     {
         if(sign == '+')
@@ -267,7 +257,6 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
 
 void Server::modeCommand(Client *client, std::vector<std::string> params)
 {
-    //parse
     if (params.empty())
     {
         reply(client, "461", "MODE", "Not enough parameters");
@@ -292,7 +281,6 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
         return;
     }
     
-    //what mode is it?
     if (params.size() < 2)
     {
         std::string curr_mode = "+";
@@ -304,7 +292,7 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
             curr_mode += "k";
         send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + chanName + " " + curr_mode);
         return;
-    }
-    //valid mode ? handle it     
+    } 
+
     handle_mode(client, channel ,params);   
 }

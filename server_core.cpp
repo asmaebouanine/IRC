@@ -6,7 +6,7 @@ void Server::server_setup()
 
     memset(&addr, 0, sizeof(addr));
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0); // IPPROTO_TCP
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1)
     {
         std::cout << "socket failed \n";
@@ -22,7 +22,7 @@ void Server::server_setup()
         return;
     }
     
-    if (fcntl(server_fd , F_SETFL, O_NONBLOCK) == -1) // so the socket fd becomes non blocking
+    if (fcntl(server_fd , F_SETFL, O_NONBLOCK) == -1)
     {
         std::cout << "fcntl failed \n";
         close(server_fd);
@@ -56,13 +56,12 @@ void Server::server_setup()
     server.events = POLLIN;
     server.revents = 0;
 
-    fds.push_back(server); // I add server to my vector of fds;
+    fds.push_back(server);
 
     std::cout << "server ready\n";
     return;
 }
 
-/* ---------------- MAIN LOOP ---------------- */
 
 void Server::server_core()
 {
@@ -92,18 +91,16 @@ void Server::server_core()
                 else
                     handle_client(fds[i].fd);
             }
-            // Only increment if the size didn't shrink from a disconnect
             if (fds.size() == current_size)
                 i++;
         }
     }
 }
 
-/* ---------------- RUN ---------------- */
 void Server::run()
 {
     server_setup();
-    if (server_fd == -1)// so the poll loop dont hung forever
+    if (server_fd == -1)
         return;
     server_core(); 
 }
