@@ -260,8 +260,6 @@ void Server::handle_command(Client *client, Command command)
         reply(client, "421", command.cmd, "Unknown command");
 }
 
-
-
 Command Server::dispatch_user(tmp_cmd tmp)
 {
     Command command;
@@ -270,6 +268,7 @@ Command Server::dispatch_user(tmp_cmd tmp)
 
     std::string before_colon;
     std::string after_colon;
+    bool has_colon = false;
 
 
 
@@ -280,6 +279,7 @@ Command Server::dispatch_user(tmp_cmd tmp)
     {
         before_colon = tmp.arg.substr(0, colon_index);
         after_colon = tmp.arg.substr(colon_index + 1); 
+        has_colon = true;
     }
     else
        before_colon = tmp.arg;
@@ -298,11 +298,12 @@ Command Server::dispatch_user(tmp_cmd tmp)
         command.params.push_back(before_colon.substr(0, space));
         before_colon = before_colon.substr(space + 1);
     }
-    if(!after_colon.empty())
+    if(has_colon && (!after_colon.empty() || command.cmd == "TOPIC"))
         command.params.push_back(after_colon);
 
     return(command);
 }
+
 
 Command Server::dispatch_pass_nick(tmp_cmd tmp)
 {
