@@ -278,7 +278,7 @@ void Server::kickCommand(Client *client, std::vector<std::string> params)
         return ;
     }
 
-    std::string kickMsg = ":" + prefix(*client) + " KICK " + chanName
+    std::string kickMsg = prefix(*client) + " KICK " + chanName
                         + " " + targetNick + " :" + reason;
     broadcast(channel, kickMsg, -1);
 
