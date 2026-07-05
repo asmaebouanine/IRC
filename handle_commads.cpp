@@ -383,11 +383,13 @@ void Server::check_buffer(Client *client)
     while ((pos = client->buffer.find("\n")) != std::string::npos)
     {
         command_ = client->buffer.substr(0, pos);
+        client->buffer.erase(0, pos + 1);
         if (!command_.empty() && (command_[command_.size() - 1] =='\r'))
             command_.erase(command_.size() - 1);
+        if( command_.size()> 510)
+            continue;
         command = parse_command(command_);
 
         handle_command(client, command);
-        client->buffer.erase(0, pos + 1);
     } 
 }

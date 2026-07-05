@@ -46,12 +46,7 @@ bool parse_port(const std::string& str, int& port)
 
 void parse_and_reply(int bot_fd, const std::string& raw_msg) 
 {
-    if (raw_msg.substr(0, 4) == "PING") {
-        std::string pong_reply = "PONG" + raw_msg.substr(4);
-        send(bot_fd, pong_reply.c_str(), pong_reply.size(), 0);
-        return;
-    }
-    
+   
     size_t privmsg_pos = raw_msg.find(" PRIVMSG ");
     if (privmsg_pos == std::string::npos)
         return;
@@ -65,7 +60,7 @@ void parse_and_reply(int bot_fd, const std::string& raw_msg)
             sender_nick = raw_msg.substr(1, end_of_nick - 1);
     }
 
-    if (sender_nick == "TestBot")
+    if (sender_nick == "Rocky")
         return;
 
     size_t target_start = privmsg_pos + 9;
@@ -74,7 +69,7 @@ void parse_and_reply(int bot_fd, const std::string& raw_msg)
         return;
     
     std::string target = raw_msg.substr(target_start, target_end - target_start);
-    if (target == "TestBot") 
+    if (target == "Rocky") 
         target = sender_nick;
 
 
@@ -161,11 +156,11 @@ int main(int argc, char **argv)
     }
     
     std::string auth = "PASS " + password + "\r\n"
-                       "NICK TestBot\r\n"
-                       "USER Tbot 0 * :just a test boot\r\n";
+                       "NICK Rocky\r\n"
+                       "USER Rpsbot 0 * :rock paper scissors boot\r\n";
     send(bot_fd, auth.c_str(), auth.size(), 0);
 
-    std::cout << "[TestBot] Connected and listening..." << std::endl;
+    std::cout << "[Rocky] Connected and listening..." << std::endl;
     
     char buffer[BUFFER_SIZE];
     while (true) {
