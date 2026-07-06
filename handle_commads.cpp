@@ -11,7 +11,7 @@ void Server::try_register(Client *client)
         std::string rpl_welcome = "Welcome to the Internet Relay Network, " + identity;
         reply(client, "001", "", rpl_welcome);
 
-        std::string rpl_yourhost = "Your host is "+ SERVER_NAME + " running version 1.0";
+        std::string rpl_yourhost = "Your host is "+ SERVER_NAME + ", running version 1.0";
         reply(client, "002", "", rpl_yourhost);
 
         std::time_t now = std::time(NULL);
