@@ -50,83 +50,139 @@ std::string Server::namesList(Channel *ch)
     }
     return list;
 }
+void Server::operatorHandover(Channel *channel, const std::string &chanName)
+{
+    if (!channel->isEmpty() && channel->getOperator().empty())
+    {
+        int nextOp = channel->getMembers()[0];
+        channel->addOperator(nextOp);
+        Client *newOp = findClientByFd(nextOp);
+        if (newOp)
+        {
+            std::string msg = ":" + SERVER_NAME + " MODE " + chanName + " +o " + newOp->nickname;
+            broadcast(channel, msg, -1);
+         }
+    }
+}
 
 void Server::joinCommand(Client *client, std::vector<std::string> params)
 {
     if (!client->registered)
     {
-        reply(client, "451 ", "JOIN", "You have not registered");
+        reply(client, "451", "JOIN", "You have not registered");
         return ;
     }
     if (params.empty())
     {
-        reply(client, "461 ", "JOIN", "Not enough parameters");
+        reply(client, "461", "JOIN", "Not enough parameters");
         return ;
     }
-  
-    std::string chanName = params[0];
-    std::string key;
+    if (params[0] == "0")
+    {
+        std::map<std::string, Channel*>::iterator it = channels.begin();
+        while (it != channels.end())
+        {
+            Channel *ch = it->second;
+            if (ch->isMember(client->fd))
+            {
+                std::string partMsg = prefix(*client) + " PART " + ch->getName() + " :Left all channels";
+                broadcast(ch, partMsg, -1);
+                ch->removeMember(client->fd);
+                ch->removeOperator(client->fd);
+                if (ch->isEmpty())
+                {
+                    delete ch;
+                    channels.erase(it++);
+                    continue ;
+                }
+                else
+                    operatorHandover(ch, ch->getName());
+                }
+            ++it;
+        }
+        return ;
+    }
 
+    std::vector<std::string> chans = splitTargets(params[0]);
+    std::vector<std::string> keys;
     if (params.size() > 1)
-        key = params[1];
-    else
-        key = "";
+        keys = splitTargets(params[1]);
 
-    if (chanName.empty() || chanName[0] != '#')
+    for (size_t i = 0; i < chans.size(); i++)
     {
-        reply(client, "476 ", chanName, "Bad Channel Mask");
-        return ;
-    }
-  
-    Channel *channel = findChannel(chanName);
-    bool isNew = (channel == NULL);
-    
-    if (isNew)
-        channel = new Channel(chanName);
-    else
-    {
-        if (channel->isMember(client->fd))
-            return ;
-        if (channel->isInviteOnly() && !channel->isInvited(client->fd))
+        std::string chanName = chans[i];
+        std::string currentKey;
+        if (i < keys.size())
+            currentKey = keys[i];
+        else 
+            currentKey = "";
+        if (chanName.empty() || chanName[0] != '#')
         {
-            reply(client, "473 ", chanName, "Cannot join channel (+i)");
-                return ;
+            reply(client, "476", chanName, "Bad Channel Mask");
+            continue ;
         }
-        if (!channel->getKey().empty() && channel->getKey() != key)
+        
+        int count = 0;
+        std::map<std::string, Channel*>::iterator it;
+        for (it = channels.begin(); it != channels.end(); ++it)
+            if (it->second->isMember(client->fd))
+                count++;
+        if (count >= 25)
         {
-            reply(client, "475 ", chanName, "Cannot join channel (+k)");
-                return ;
+            reply (client, "405", chanName, "You have joined too many channels");
+            continue;
         }
-        if (channel->getUserLimit() > 0 && channel->getMemberCount() >= channel->getUserLimit())
-        {
-            reply(client, "471 ", chanName, "Cannot join channel (+l)");
-                return ;
-        }
-    }
-    if (isNew)
-        channels[chanName] = channel;
-    channel->addMember(client->fd);
-  
-    if (channel->getMemberCount() == 1)
-        channel->addOperator(client->fd);
 
-    channel->removeInvite(client->fd);
-    std::string joinMsg = prefix(*client) + " JOIN " + chanName;
-    broadcast(channel, joinMsg, -1);
+        Channel *channel = findChannel(chanName);
+        bool isNew = (channel == NULL);
 
-    if (!channel->getTopic().empty())
-        send_to_client(client->fd, ":" + SERVER_NAME + " 332 " + client->nickname + " " + chanName + " :" + channel->getTopic());
-    else
-        send_to_client(client->fd, ":" + SERVER_NAME + " 331 " + client->nickname + " " + chanName + " :No topic is set");
-    send_to_client(client->fd, ":" + SERVER_NAME + " 353 " + client->nickname + " = " + chanName + " :" + namesList(channel));
-    send_to_client(client->fd, ":" + SERVER_NAME + " 366 " + client->nickname + " " + chanName + " :End of /NAMES list");
+        if (isNew)
+        {
+            channel = new Channel(chanName);
+            channels[chanName] = channel;
+        }
+        else
+        {
+            if (channel->isMember(client->fd))
+                continue ;
+            if (channel->isInviteOnly() && !channel->isInvited(client->fd))
+            {
+                reply(client, "473", chanName, "Cannot join channel (+i)");
+                continue ;
+            }
+            if (!channel->getKey().empty() && channel->getKey() != currentKey)
+            {
+                reply(client, "475", chanName, "Cannot join channel (+k)");
+                continue ;
+            }
+            if (channel->getUserLimit() > 0 && channel->getMemberCount() >= channel->getUserLimit())
+            {
+                reply(client, "471", chanName, "Cannot join channel (+l)");
+                continue ;
+            }
+        }
+  
+        channel->addMember(client->fd);
+        if (channel->getMemberCount() == 1)
+            channel->addOperator(client->fd);
+
+        channel->removeInvite(client->fd);
+
+        std::string joinMsg = prefix(*client) + " JOIN " + chanName;
+        broadcast(channel, joinMsg, -1);
+
+        if (!channel->getTopic().empty())
+            send_to_client(client->fd, ":" + SERVER_NAME + " 332 " + client->nickname + " " + chanName + " :" + channel->getTopic());
+        send_to_client(client->fd, ":" + SERVER_NAME + " 353 " + client->nickname + " = " + chanName + " :" + namesList(channel));
+        send_to_client(client->fd, ":" + SERVER_NAME + " 366 " + client->nickname + " " + chanName + " :End of /NAMES list");
+    }
 }
 
 void Server::partCommand(Client *client, std::vector<std::string> params)
 {
     if (!client->registered)
     {
-        reply(client, "451 ", "PART", "You have not registered");
+        reply(client, "451", "PART", "You have not registered");
         return ;
     }
     if (params.empty())
@@ -135,46 +191,51 @@ void Server::partCommand(Client *client, std::vector<std::string> params)
         return ;
     }
 
-    std::string chanName = params[0];
-    std::string reason;
+    std::vector<std::string> chans = splitTargets(params[0]);
+    std::string reason = "Leaving";
+
     if (params.size() > 1)
     {
+        reason = "";
         for (size_t i = 1; i < params.size(); i++)
         {
             reason += params[i];
             if (i + 1 < params.size())
                 reason += " ";
         }
+        if (!reason.empty() && reason[0] == ':')
+            reason = reason.substr(1);
     }
-    else
-        reason = "Leaving";
 
-    if (!reason.empty() && reason[0] == ':')
-        reason = reason.substr(1);
+    for (size_t i = 0; i < chans.size(); i++)
+    {
+        std::string chanName = chans[i];
+        Channel *channel = findChannel(chanName);
+
+        if (!channel)
+        {
+            reply(client, "403", chanName, "No such channel");
+            continue ;
+        }
+        if (!channel->isMember(client->fd))
+        {
+            reply(client, "442", chanName, "You're not on that channel");
+            continue ;
+        }
     
-    Channel *channel = findChannel(chanName);
-    if (!channel)
-    {
-        reply(client, "403", chanName, "No such channel");
-        return ;
-    }
-    if (!channel->isMember(client->fd))
-    {
-        reply(client, "442", chanName, "You're not on that channel");
-        return ;
-    }
-
-    std::string partMsg = prefix(*client) + " PART " + chanName + " :" + reason;
-    broadcast(channel, partMsg, -1);
-
-    channel->removeMember(client->fd);
-    if (channel->isOperator(client->fd))
+        std::string partMsg = prefix(*client) + " PART " + chanName + " :" + reason;
+        broadcast(channel, partMsg, -1);
+    
+        channel->removeMember(client->fd);
         channel->removeOperator(client->fd);
-
-    if (channel->isEmpty())
-    {
-        channels.erase(chanName);
-        delete channel;
+    
+        if (channel->isEmpty())
+        {
+            channels.erase(chanName);
+            delete channel;
+        }
+        else
+            operatorHandover(channel, chans[i]);
     }
 }
 
@@ -229,6 +290,11 @@ void Server::inviteCommand(Client *client, std::vector<std::string> params)
 
 void Server::kickCommand(Client *client, std::vector<std::string> params)
 {
+    if (!client->registered)
+    {
+        reply(client, "451", "KICK", "You have not registered");
+        return ;
+    }
     if (params.size() < 2)
     {
         reply(client, "461", "KICK", "Not enough parameters");
@@ -236,23 +302,21 @@ void Server::kickCommand(Client *client, std::vector<std::string> params)
     }
 
     std::string chanName = params[0];
-    std::string targetNick = params[1];
-    std::string reason;
+    std::vector<std::string> targets = splitTargets(params[1]);
+    std::string reason = "Kicked";
 
     if (params.size() > 2)
     {
-        for (size_t i = 0; i < params.size(); i++)
+        reason = "";
+        for (size_t i = 2; i < params.size(); i++)
         {
             reason += params[i];
             if (i + 1 < params.size())
                 reason += " ";
         }
+        if (!reason.empty() && reason[0] == ':')
+            reason = reason.substr(1);
     }
-    else
-        reason = "Kicked";
-
-    if (!reason.empty() && reason[0] == ':')
-        reason = reason.substr(1);
 
     Channel *channel = findChannel(chanName);
     if (!channel)
@@ -270,25 +334,31 @@ void Server::kickCommand(Client *client, std::vector<std::string> params)
         reply(client, "482", chanName, "You're not channel operator");
         return ;
     }
-
-    Client *target = findClientByNick(targetNick);
-    if (!target || !channel->isMember(target->fd))
+    for (size_t i = 0; i < targets.size(); i++)
     {
-        reply (client, "441", chanName, targetNick + " is not on that channel");
-        return ;
-    }
+        std::string targetNick = targets[i];
+        Client *target = findClientByNick(targetNick);
 
-    std::string kickMsg = prefix(*client) + " KICK " + chanName
-                        + " " + targetNick + " :" + reason;
-    broadcast(channel, kickMsg, -1);
+        if (!target || !channel->isMember(target->fd))
+        {
+            reply (client, "441", chanName, targetNick + " is not on that channel");
+            continue ;
+        }
 
-    channel->removeMember(target->fd);
-    if (channel->isOperator(client->fd))
+        std::string kickMsg = prefix(*client) + " KICK " + chanName
+                            + " " + targetNick + " :" + reason;
+        broadcast(channel, kickMsg, -1);
+
+        channel->removeMember(target->fd);
         channel->removeOperator(target->fd);
 
-    if (channel->isEmpty())
-    {
-        channels.erase(chanName);
-        delete channel;
+        if (channel->isEmpty())
+        {
+            channels.erase(chanName);
+            delete channel;
+            break;
+        }
+        else
+            operatorHandover(channel, params[0]);
     }
 }

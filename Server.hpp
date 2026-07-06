@@ -61,8 +61,10 @@ class Server
         Channel*    findChannel(const std::string& name);
         Client*     findClientByFd(int fd);
         Client*     findClientByNick(const std::string& nick);
-        void        broadcast(Channel *ch, const std::string& msg, int excludeFd);
         std::string namesList(Channel *ch);
+        std::string prefix(const Client &client);
+        void        broadcast(Channel *ch, const std::string& msg, int excludeFd);
+        void        operatorHandover(Channel *channel, const std::string &chanName);
 
         void        joinCommand(Client *client, std::vector<std::string> params);
         void        partCommand(Client *client, std::vector<std::string> params);

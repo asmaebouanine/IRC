@@ -24,6 +24,7 @@ class Channel
         const std::string& getName() const;
         const std::string& getTopic() const;
         const std::string& getKey() const;
+        const std::vector<int>& getOperator() const;
         int getUserLimit() const;
         bool isInviteOnly() const;
         bool isTopicRestricted () const;

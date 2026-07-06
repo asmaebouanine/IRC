@@ -21,6 +21,10 @@ const std::string& Channel::getKey() const
 {
     return (_key);
 }
+const std::vector<int>& Channel::getOperator() const
+{
+    return _operators;
+}
 int Channel::getUserLimit() const
 {
     return (_userLimit);
