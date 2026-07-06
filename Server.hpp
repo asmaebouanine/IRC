@@ -107,6 +107,7 @@ class Server
         std::vector<std::string> splitTargets(std::string &targets);
         void modeCommand(Client *client, std::vector<std::string> params);
         void handle_mode(Client *client, Channel *channel, std::vector<std::string> params);
+        void reply_params(Client *client,const std::string &code, const std::string &params);
 };
 
 #endif

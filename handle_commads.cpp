@@ -7,10 +7,11 @@ void Server::try_register(Client *client)
     {
         client->registered = true;
 
-        std::string rpl_welcome = "Welcome to the Internet Relay Network " + prefix(*client);
+        std::string identity = client->nickname + "!" + client->username + "@" + client->hostname;
+        std::string rpl_welcome = "Welcome to the Internet Relay Network, " + identity;
         reply(client, "001", "", rpl_welcome);
 
-        std::string rpl_yourhost = "Your host is IRC_Server, running version 1.0";
+        std::string rpl_yourhost = "Your host is "+ SERVER_NAME + " running version 1.0";
         reply(client, "002", "", rpl_yourhost);
 
         std::time_t now = std::time(NULL);
@@ -21,9 +22,11 @@ void Server::try_register(Client *client)
 
         std::string rpl_created = "This server was created " + time_str;
         reply(client, "003", "", rpl_created);
+      
+        std::string rpl_myinfo = SERVER_NAME + " 1.0 0 itklo";
 
-        std::string rpl_myinfo = "IRC_Server 1.0  itklo";
-        reply(client, "004", "", rpl_myinfo);
+        reply_params(client, "004", rpl_myinfo);
+
         std::string pref = prefix(*client);
         std::cout << pref << " has connected to " << SERVER_NAME << std::endl;
     }
@@ -106,7 +109,7 @@ void Server::nick_command(Client *client, Command command)
 
     if (!is_valid_nick(command.params[0]))
     {
-        reply(client, "432", command.params[0], "Erroneous nickname");
+        reply(client, "432", command.params[0], "Erroneus nickname");
         return;
     }
 
@@ -163,7 +166,7 @@ void Server::pass_command(Client *client, Command command)
     
     if(client->registered)
     {
-        reply(client, "462", "", "Unauthorized command (already registered)");
+        reply(client, "462", "", "You may not reregister");
         return;
     }
   
@@ -192,12 +195,12 @@ void Server::user_command(Client *client, Command command)
     }
     if (client->registered)
     {
-        reply(client, "462", "", "Unauthorized command (already registered)");
+        reply(client, "462", "", "You may not reregister");
         return;
     }
 
     client->username = command.params[0];
-    client->realname = command.params[3];
+    client->realname = command.params.back();
 
     
     client->user_set = true;

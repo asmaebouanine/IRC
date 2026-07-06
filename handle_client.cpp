@@ -27,6 +27,21 @@ void Server::reply(Client *client, const std::string &code, const std::string &c
         remove_client(client->fd);
 }
 
+void Server::reply_params(Client *client,const std::string &code, const std::string &params)
+{
+    std::string msg = ":" + SERVER_NAME + " " + code;
+
+    if (!client->nickname.empty())
+        msg += " " + client->nickname;
+    else
+        msg += " *";
+
+    msg += " " + params;
+
+    if (!send_to_client(client->fd, msg))
+        remove_client(client->fd);
+}
+
 bool Server::send_to_client(int fd, std::string msg)
 {
     msg += "\r\n";
