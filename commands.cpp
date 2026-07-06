@@ -20,6 +20,7 @@ void Server::quitCommand(Client *client, std::vector<std::string> params)
             broadcast(ch, msg, client->fd);
             ch->removeMember(client->fd);
             ch->removeOperator(client->fd);
+            operatorHandover(ch, it->first);
         }
     }
     send_to_client(client->fd, "ERROR :Closing Link: " + client->hostname + " (Quit: " + reason + ")");
