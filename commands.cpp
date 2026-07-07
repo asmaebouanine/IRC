@@ -176,7 +176,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
     {
         if(params_index >= params.size())
         {
-            reply(client, "461", "MODE", ":Not enough parameters");
+            reply(client, "461", "MODE", "Not enough parameters");
             return;
         }
         Client *target = findClientByNick(params[params_index]);
@@ -207,7 +207,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
         {    
             if(params_index >= params.size())
             {
-                reply(client, "461", "MODE", ":Not enough parameters");
+                reply(client, "461", "MODE", "Not enough parameters");
                 return;
             }
             channel->setKey(params[params_index]);
