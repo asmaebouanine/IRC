@@ -60,7 +60,12 @@ int main(int argc, char **argv)
         std::cout << "Invalid port range\n";
         return(1);
    }
-
+   std::string str = argv[2];
+   if(str.empty())
+   {
+        std::cout << "password can't be empty\n"; 
+        return(1);
+   }
    Server server(port,argv[2]);
    server.run(); 
 

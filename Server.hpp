@@ -108,6 +108,7 @@ class Server
         void modeCommand(Client *client, std::vector<std::string> params);
         void handle_mode(Client *client, Channel *channel, std::vector<std::string> params);
         void reply_params(Client *client,const std::string &code, const std::string &params);
+        Client *get_client(int fd);
 };
 
 #endif

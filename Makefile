@@ -1,7 +1,6 @@
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
-
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address
 SERVERSRS = server.cpp server_core.cpp handle_client.cpp handle_commads.cpp \
             Channel.cpp channelCommands.cpp commands.cpp
 SERVEROBJS = $(SERVERSRS:.cpp=.o)

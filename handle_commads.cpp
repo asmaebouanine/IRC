@@ -387,12 +387,18 @@ void Server::check_buffer(Client *client)
     {
         command_ = client->buffer.substr(0, pos);
         client->buffer.erase(0, pos + 1);
-        if (!command_.empty() && (command_[command_.size() - 1] =='\r'))
-            command_.erase(command_.size() - 1);
-        if( command_.size()> 510)
-            continue;
-        command = parse_command(command_);
 
+        if (!command_.empty() && command_[command_.size() - 1] == '\r')
+            command_.erase(command_.size() - 1);
+
+        if (command_.size() > 510)
+            continue;
+
+        command = parse_command(command_);
+        
+        int fd = client->fd;
         handle_command(client, command);
-    } 
+        if (get_client(fd) == NULL)
+            return;
+    }
 }
