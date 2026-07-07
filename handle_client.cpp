@@ -125,7 +125,7 @@ void Server::remove_client(int fd)
     {
         it->second->removeMember(fd);
         it->second->removeOperator(fd);
-        operatorHandover(it->second, it->first);//added hadi to handle ctrl c in case u removed the only operator on a certain channel , bach matb9ach chann with no op 
+        operatorHandover(it->second, it->first);
         if (it->second->isEmpty())
         {
             delete it->second;

@@ -74,7 +74,7 @@ void Server::send_to_one_target(Client *client, const std::string &target, const
 {
     std::string msg = prefix(*client) + " PRIVMSG " + target + " :" + text;
 
-    if (target[0] == '#')
+    if (target[0] == '#' || target[0] == '&')
     {
         Channel *channel = findChannel(target);
         if (!channel)

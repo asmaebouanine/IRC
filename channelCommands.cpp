@@ -116,7 +116,7 @@ void Server::joinCommand(Client *client, std::vector<std::string> params)
             currentKey = keys[i];
         else 
             currentKey = "";
-        if (chanName.empty() || chanName[0] != '#')
+        if (chanName.empty() || (chanName[0] != '#' && chanName[0] != '&'))
         {
             reply(client, "476", chanName, "Bad Channel Mask");
             continue ;
