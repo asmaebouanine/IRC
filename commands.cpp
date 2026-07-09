@@ -210,7 +210,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
                     if(params_index >= params.size())
                     {
                         reply(client, "461", "MODE", "Not enough parameters");
-                        return;
+                        continue;
                     }
                     channel->setKey(params[params_index]);
                     std::string msg = prefix(*client) + " MODE " + params[0] + " +k " + params[params_index];
@@ -232,7 +232,7 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
                     if(params_index >= params.size())
                     {
                         reply(client, "461", "MODE", "Not enough parameters");
-                        return;
+                        continue;
                     }
                     int limit = std::atoi(params[params_index].c_str());
                     if (limit <= 0)
