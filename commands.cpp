@@ -146,6 +146,16 @@ void Server::privmsgCommand(Client *client, std::vector<std::string> params)
         send_to_one_target(client, targetlist[i], text);
 }
 
+long valid_limit(std::string param)
+{
+    for (size_t i = 0 ; i < param.size() ; i++)
+    {
+        if (!std::isdigit(param[i]))
+            return -1;
+    }
+    return std::atol(param.c_str());
+}
+
 void Server::handle_mode(Client *client, Channel *channel, std::vector<std::string> params)
 {
     std::string mode = params[1];
@@ -239,8 +249,8 @@ void Server::handle_mode(Client *client, Channel *channel, std::vector<std::stri
                     reply(client, "461", "MODE", "Not enough parameters");
                     continue;
                 }
-                int limit = std::atoi(params[params_index].c_str());
-                if (limit <= 0)
+                long limit = valid_limit(params[params_index]);
+                if (limit <= 0 || limit > INT_MAX)
                 {
                     send_to_client(client->fd, ":" + SERVER_NAME + " 696 " + client->nickname + " " + params[0] + " l " + params[params_index] + " :Invalid limit mode parameter.");
                     params_index++;
