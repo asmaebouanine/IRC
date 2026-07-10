@@ -19,6 +19,7 @@
 #include <arpa/inet.h>
 #include <cctype>
 #include <ctime> 
+#include <sstream>
 
 #include"Channel.hpp"
 #include<map>

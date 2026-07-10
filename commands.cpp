@@ -290,13 +290,26 @@ void Server::modeCommand(Client *client, std::vector<std::string> params)
     if (params.size() < 2)
     {
         std::string curr_mode = "+";
+        std::string args;
+        
         if(channel->isInviteOnly())
             curr_mode += "i";
         if(channel->isTopicRestricted()) 
             curr_mode += "t";
+        if(channel->getUserLimit() != 0)
+        {
+            curr_mode += "l";
+            std::stringstream ss;
+            ss << channel->getUserLimit();
+            args += " " + ss.str();
+        }
         if(!channel->getKey().empty())
+        {
             curr_mode += "k";
-        send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + chanName + " " + curr_mode);
+            if (channel->isMember(client->fd))
+                args += " " + channel->getKey();
+        }
+        send_to_client(client->fd, ":" + SERVER_NAME + " 324 " + client->nickname + " " + chanName + " " + curr_mode + args);
         return;
     } 
 
